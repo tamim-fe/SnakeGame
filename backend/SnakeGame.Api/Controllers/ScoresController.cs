@@ -16,6 +16,7 @@ namespace SnakeGame.Api.Controllers
             _context = context;
         }
 
+        // 🔹 Save Score (POST)
         [HttpPost]
         public async Task<IActionResult> SaveScore([FromBody] Score score)
         {
@@ -25,12 +26,18 @@ namespace SnakeGame.Api.Controllers
             }
 
             score.Date = DateTime.UtcNow;
+
             _context.Scores.Add(score);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Score saved successfully!", id = score.Id });
+            return Ok(new
+            {
+                message = "Score saved successfully!",
+                id = score.Id
+            });
         }
 
+        // 🔹 Get Top 10 Scores (GET)
         [HttpGet("leaderboard")]
         public async Task<ActionResult<IEnumerable<Score>>> GetLeaderboard()
         {
