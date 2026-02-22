@@ -1,4 +1,4 @@
-const API_URL = 'https://snakegame-gdwt.onrender.com';
+const API_URL = 'https://snakegame-gdwt.onrender.com/api/scores';
 
 async function fetchLeaderboard() {
     const listElement = document.getElementById('leaderboard-list');
