@@ -22,6 +22,8 @@ let highScore = localStorage.getItem('snakeHighScore') || 0;
 let gameLoop;
 let isGameOver = false;
 
+let gameSpeed = 200; // 🔥 Starting slow speed
+
 highScoreElement.textContent = highScore;
 
 function init() {
@@ -36,7 +38,6 @@ function init() {
     gameOverOverlay.classList.add('hidden');
     startOverlay.classList.add('hidden');
 
-    // 🔥 Reset submit button every new game
     submitBtn.disabled = false;
     submitBtn.textContent = 'SAVE';
     playerNameInput.value = '';
@@ -44,7 +45,9 @@ function init() {
     fetchLeaderboard();
 
     if (gameLoop) clearInterval(gameLoop);
-    gameLoop = setInterval(draw, 100);
+
+    gameSpeed = 200; // 🔥 Reset speed every new game
+    gameLoop = setInterval(draw, gameSpeed);
 }
 
 function generateFood() {
@@ -115,6 +118,18 @@ function moveSnake() {
         score += 10;
         scoreElement.textContent = score;
         generateFood();
+
+        // 🔥 Increase speed every 50 points
+        if (score % 50 === 0) {
+            clearInterval(gameLoop);
+
+            if (gameSpeed > 60) { // Minimum limit
+                gameSpeed -= 15;
+            }
+
+            gameLoop = setInterval(draw, gameSpeed);
+        }
+
     } else {
         snake.pop();
     }
@@ -177,9 +192,7 @@ submitBtn.addEventListener('click', async () => {
 
     try {
         await submitScore(name, score);
-
         submitBtn.textContent = 'SAVED!';
-
         await fetchLeaderboard();
 
         setTimeout(() => {
