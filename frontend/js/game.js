@@ -24,7 +24,6 @@ let isGameOver = false;
 
 highScoreElement.textContent = highScore;
 
-// Initialize Game
 function init() {
     snake = [{ x: 10, y: 10 }];
     generateFood();
@@ -33,8 +32,15 @@ function init() {
     score = 0;
     isGameOver = false;
     scoreElement.textContent = score;
+
     gameOverOverlay.classList.add('hidden');
     startOverlay.classList.add('hidden');
+
+    // 🔥 Reset submit button every new game
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'SAVE';
+    playerNameInput.value = '';
+
     fetchLeaderboard();
 
     if (gameLoop) clearInterval(gameLoop);
@@ -46,7 +52,7 @@ function generateFood() {
         x: Math.floor(Math.random() * tileCount),
         y: Math.floor(Math.random() * tileCount)
     };
-    // Check if food spawned on snake
+
     if (snake.some(segment => segment.x === food.x && segment.y === food.y)) {
         generateFood();
     }
@@ -54,24 +60,29 @@ function generateFood() {
 
 function draw() {
     moveSnake();
+
     if (checkCollision()) {
         endGame();
         return;
     }
 
-    // Clear Canvas
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw Grid (Subtle)
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
     for (let i = 0; i < tileCount; i++) {
-        ctx.beginPath(); ctx.moveTo(i * gridSize, 0); ctx.lineTo(i * gridSize, canvas.height); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, i * gridSize); ctx.lineTo(canvas.width, i * gridSize); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(i * gridSize, 0);
+        ctx.lineTo(i * gridSize, canvas.height);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, i * gridSize);
+        ctx.lineTo(canvas.width, i * gridSize);
+        ctx.stroke();
     }
 
-    // Draw Food
-    ctx.fillStyle = '#ff9e64'; // Food color
+    ctx.fillStyle = '#ff9e64';
     ctx.shadowBlur = 15;
     ctx.shadowColor = '#ff9e64';
     ctx.beginPath();
@@ -79,18 +90,18 @@ function draw() {
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // Draw Snake
     snake.forEach((segment, index) => {
         ctx.fillStyle = index === 0 ? '#73daca' : '#41a6b5';
         ctx.shadowBlur = index === 0 ? 10 : 0;
         ctx.shadowColor = '#73daca';
 
-        ctx.beginPath();
-        const r = 4; // Corner radius
+        const r = 4;
         const x = segment.x * gridSize + 1;
         const y = segment.y * gridSize + 1;
         const w = gridSize - 2;
         const h = gridSize - 2;
+
+        ctx.beginPath();
         ctx.roundRect(x, y, w, h, r);
         ctx.fill();
     });
@@ -111,16 +122,17 @@ function moveSnake() {
 
 function checkCollision() {
     const head = snake[0];
-    // Wall collision
+
     if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
         return true;
     }
-    // Self collision
+
     for (let i = 1; i < snake.length; i++) {
         if (head.x === snake[i].x && head.y === snake[i].y) {
             return true;
         }
     }
+
     return false;
 }
 
@@ -137,37 +149,47 @@ function endGame() {
     }
 }
 
-// Controls
 window.addEventListener('keydown', e => {
     switch (e.key) {
-        case 'ArrowUp': if (dy === 0) { dx = 0; dy = -1; } break;
-        case 'ArrowDown': if (dy === 0) { dx = 0; dy = 1; } break;
-        case 'ArrowLeft': if (dx === 0) { dx = -1; dy = 0; } break;
-        case 'ArrowRight': if (dx === 0) { dx = 1; dy = 0; } break;
+        case 'ArrowUp':
+            if (dy === 0) { dx = 0; dy = -1; }
+            break;
+        case 'ArrowDown':
+            if (dy === 0) { dx = 0; dy = 1; }
+            break;
+        case 'ArrowLeft':
+            if (dx === 0) { dx = -1; dy = 0; }
+            break;
+        case 'ArrowRight':
+            if (dx === 0) { dx = 1; dy = 0; }
+            break;
     }
 });
 
-// Event Listeners
 startBtn.addEventListener('click', init);
 restartBtn.addEventListener('click', init);
 
 submitBtn.addEventListener('click', async () => {
     const name = playerNameInput.value.trim() || 'Anonymous';
+
     submitBtn.disabled = true;
     submitBtn.textContent = 'SAVING...';
 
     try {
         await submitScore(name, score);
+
         submitBtn.textContent = 'SAVED!';
+
+        await fetchLeaderboard();
+
         setTimeout(() => {
-            fetchLeaderboard();
-            init(); // Automaticaly restart after save
+            init();
         }, 1000);
+
     } catch (error) {
         submitBtn.textContent = 'ERROR';
         submitBtn.disabled = false;
     }
 });
 
-// Initial Fetch
 fetchLeaderboard();
